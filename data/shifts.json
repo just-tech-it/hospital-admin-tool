@@ -1,0 +1,6 @@
+[
+  { "id": 1, "staffName": "Dr. Smith", "role": "Physician", "checkedIn": true },
+  { "id": 2, "staffName": "Nurse Joy", "role": "Head Nurse", "checkedIn": true },
+  { "id": 3, "staffName": "Dr. House", "role": "Specialist", "checkedIn": false },
+  { "id": 4, "staffName": "Nurse Ratched", "role": "Staff Nurse", "checkedIn": true }
+]

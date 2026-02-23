@@ -1,0 +1,12 @@
+[
+  { "id": 101, "status": "occupied" },
+  { "id": 102, "status": "occupied" },
+  { "id": 103, "status": "occupied" },
+  { "id": 104, "status": "occupied" },
+  { "id": 105, "status": "available" },
+  { "id": 106, "status": "available" },
+  { "id": 107, "status": "occupied" },
+  { "id": 108, "status": "occupied" },
+  { "id": 109, "status": "occupied" },
+  { "id": 110, "status": "available" }
+]
