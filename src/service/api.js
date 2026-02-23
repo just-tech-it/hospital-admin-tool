@@ -1,6 +1,6 @@
 /* Simple API service to fetch hospital data. */
 
-const BASE_URL = "/data";
+const BASE_URL = "./data";
 
 export const fetchShifts = async () => {
   try {
