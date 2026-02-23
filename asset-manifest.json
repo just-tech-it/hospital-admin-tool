@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/hospital-admin-tool/static/css/main.0d5b9e9f.css",
-    "main.js": "/hospital-admin-tool/static/js/main.1da26bc8.js",
+    "main.js": "/hospital-admin-tool/static/js/main.db40991f.js",
     "index.html": "/hospital-admin-tool/index.html",
     "main.0d5b9e9f.css.map": "/hospital-admin-tool/static/css/main.0d5b9e9f.css.map",
-    "main.1da26bc8.js.map": "/hospital-admin-tool/static/js/main.1da26bc8.js.map"
+    "main.db40991f.js.map": "/hospital-admin-tool/static/js/main.db40991f.js.map"
   },
   "entrypoints": [
     "static/css/main.0d5b9e9f.css",
-    "static/js/main.1da26bc8.js"
+    "static/js/main.db40991f.js"
   ]
 }
