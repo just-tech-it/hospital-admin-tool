@@ -31,26 +31,31 @@ export const AppProvider = ({ children }) => {
   const occupied = beds.filter((b) => b.status === "occupied").length;
   const isOverCapacity = (occupied / beds.length) > 0.8;
 
-  if (isOverCapacity) {
-    // Only set the alert if we don't already have one showing
-    // This prevents the "flashing" or constant timer resets
-    const newAlert = { 
-      id: Date.now(), 
-      message: "⚠ Ward Occupancy > 80%", 
-      type: "warning" // Matches .alert-warning
-    };
-    setAlerts([newAlert]);
+  let timer;
 
-    const timer = setTimeout(() => setAlerts([]), 3000);
-    return () => clearTimeout(timer);
-  } else {
-    // ONLY clear if there's actually an alert to clear
-    // This stops unnecessary re-renders
-    if (alerts.length > 0) {
+  if (isOverCapacity) {
+    setAlerts((prev) => {
+      // Don't recreate alert if already showing
+      if (prev.length > 0) return prev;
+
+      return [{
+        id: Date.now(),
+        message: "⚠ Ward Occupancy > 80%",
+        type: "warning"
+      }];
+    });
+
+    timer = setTimeout(() => {
       setAlerts([]);
-    }
+    }, 3000);
+  } else {
+    setAlerts([]);
   }
-}, [beds]); // Remove 'alerts' from here to avoid loops
+
+  return () => {
+    if (timer) clearTimeout(timer);
+  };
+}, [beds]);
 
   // 4. Keep your helper functions
   const updateShift = useCallback((updatedShift) => {
