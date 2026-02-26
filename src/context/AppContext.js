@@ -24,34 +24,39 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   // Alert logic for occupancy warning
+  
+  // Replace your existing occupancy useEffect with this:
+
   useEffect(() => {
-    if (beds.length === 0) return;
+  const ALERT_ID = "occupancy-warning";
 
-    const occupiedCount = beds.filter((b) => b.status === "occupied").length;
-    const occupancyPercent = (occupiedCount / beds.length) * 100;
-    const ALERT_ID = "occupancy-warning";
+  // 1. Calculate occupancy
+  const totalBeds = beds.length;
+  const occupiedCount = beds.filter((b) => b.status === "occupied").length;
+  const occupancyPercent = totalBeds > 0 ? (occupiedCount / totalBeds) * 100 : 0;
 
-    console.log("Beds:", beds.length, "Occupied:", occupiedCount, "Occupancy %:", occupancyPercent);
+  setAlerts((prevAlerts) => {
+    // 2. Filter out the existing warning every time the effect runs
+    const otherAlerts = prevAlerts.filter(a => a.id !== ALERT_ID);
 
-    setAlerts((prevAlerts) => {
-      const otherAlerts = prevAlerts.filter(a => a.id !== ALERT_ID);
+    // 3. Only add it back if we actually meet the criteria
+    if (totalBeds > 0 && occupancyPercent >= 80) {
+      return [
+        ...otherAlerts,
+        {
+          id: ALERT_ID,
+          message: `⚠ Ward Occupancy ≥ 80% (${Math.round(occupancyPercent)}%)`,
+          type: "warning"
+        }
+      ];
+    }
 
-      if (occupiedCount >= beds.length * 0.8) {
-        console.log("Showing warning alert");
-        return [
-          ...otherAlerts,
-          {
-            id: ALERT_ID,
-            message: `⚠ Ward Occupancy ≥ 80% (${Math.round(occupancyPercent)}%)`,
-            type: "warning"
-          }
-        ];
-      }
+    // 4. Otherwise, return the list WITHOUT the warning
+    return otherAlerts;
+  });
+}, [beds]);
+  
 
-      console.log("Clearing warning alert");
-      return otherAlerts;
-    });
-  }, [beds]);
 
   // Correct updateBed: creates new array and new bed objects to force React update
   const updateBed = useCallback((updatedBed) => {

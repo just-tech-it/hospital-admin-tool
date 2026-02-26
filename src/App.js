@@ -8,6 +8,7 @@ function App() {
     <AppProvider>
       <div className="app-container">
         <Dashboard />
+        <Alerts />
       </div>
     </AppProvider>
   );
