@@ -1,7 +1,6 @@
 import { createContext, useState, useEffect, useMemo, useCallback } from "react";
-// 1. Import the service you just created
-import { fetchInitialData } from "../service/api"; 
-
+// 1. Import your API service
+import { fetchInitialData } from "../service/api";
 
 export const AppContext = createContext();
 
@@ -10,7 +9,7 @@ export const AppProvider = ({ children }) => {
   const [beds, setBeds] = useState([]);
   const [alerts, setAlerts] = useState([]);
 
-  // 2. Simplified useEffect using the API service
+  // Load initial data once
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -24,47 +23,62 @@ export const AppProvider = ({ children }) => {
     loadData();
   }, []);
 
-  // 3. Keep your alert logic exactly as it was
-useEffect(() => {
-  if (beds.length === 0) return;
+  // Alert logic for occupancy warning
+  useEffect(() => {
+    if (beds.length === 0) return;
 
-  const occupiedCount = beds.filter((b) => b.status === "occupied").length;
-  const ALERT_ID = "occupancy-warning";
+    const occupiedCount = beds.filter((b) => b.status === "occupied").length;
+    const occupancyPercent = (occupiedCount / beds.length) * 100;
+    const ALERT_ID = "occupancy-warning";
 
-  setAlerts((prevAlerts) => {
-    const otherAlerts = prevAlerts.filter(a => a.id !== ALERT_ID);
+    console.log("Beds:", beds.length, "Occupied:", occupiedCount, "Occupancy %:", occupancyPercent);
 
-    if (occupiedCount >= beds.length * 0.8) {
-      return [
-        ...otherAlerts,
-        {
-          id: ALERT_ID,
-          message: `⚠ Ward Occupancy ≥ 80% (${Math.round((occupiedCount / beds.length) * 100)}%)`,
-          type: "warning"
-        }
-      ];
-    }
+    setAlerts((prevAlerts) => {
+      const otherAlerts = prevAlerts.filter(a => a.id !== ALERT_ID);
 
-    return otherAlerts;
-  });
-}, [beds]);
+      if (occupiedCount >= beds.length * 0.8) {
+        console.log("Showing warning alert");
+        return [
+          ...otherAlerts,
+          {
+            id: ALERT_ID,
+            message: `⚠ Ward Occupancy ≥ 80% (${Math.round(occupancyPercent)}%)`,
+            type: "warning"
+          }
+        ];
+      }
 
+      console.log("Clearing warning alert");
+      return otherAlerts;
+    });
+  }, [beds]);
 
-  // 4. Keep your helper functions
-  const updateShift = useCallback((updatedShift) => {
-    setShifts((prev) => prev.map((s) => (s.id === updatedShift.id ? updatedShift : s)));
-  }, []);
-
+  // Correct updateBed: creates new array and new bed objects to force React update
   const updateBed = useCallback((updatedBed) => {
-    setBeds((prev) => prev.map((b) => (b.id === updatedBed.id ? updatedBed : b)));
+    setBeds((prevBeds) =>
+      prevBeds.map((b) =>
+        b.id === updatedBed.id ? { ...b, status: updatedBed.status } : b
+      )
+    );
   }, []);
 
+  // Update shift (same pattern)
+  const updateShift = useCallback((updatedShift) => {
+    setShifts((prev) =>
+      prev.map((s) => (s.id === updatedShift.id ? updatedShift : s))
+    );
+  }, []);
+
+  // Memoize context value for performance
   const value = useMemo(() => ({
-    shifts, beds, alerts, updateBed, updateShift 
+    shifts,
+    beds,
+    alerts,
+    updateBed,
+    updateShift
   }), [shifts, beds, alerts, updateBed, updateShift]);
 
   return (
-    // 5. IMPORTANT: Use AppContext.Provider (not AppProvider)
     <AppContext.Provider value={value}>
       {children}
     </AppContext.Provider>
