@@ -1,5 +1,4 @@
 import { createContext, useState, useEffect, useMemo, useCallback } from "react";
-// 1. Import your API service
 import { fetchInitialData } from "../service/api";
 
 export const AppContext = createContext();
@@ -9,7 +8,7 @@ export const AppProvider = ({ children }) => {
   const [beds, setBeds] = useState([]);
   const [alerts, setAlerts] = useState([]);
 
-  // Load initial data once
+  // 1. Load initial data
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -23,56 +22,55 @@ export const AppProvider = ({ children }) => {
     loadData();
   }, []);
 
-  // Alert logic for occupancy warning
-  
-  // Replace your existing occupancy useEffect with this:
+  // 2. Alert logic for occupancy warning
+  useEffect(() => {
+    if (beds.length === 0) return;
 
- useEffect(() => {
-  const ALERT_ID = "occupancy-warning";
-  
-  // Calculate first
-  const total = beds.length;
-  const occupiedCount = beds.filter(b => b.status === "occupied").length;
-  const occupancyRatio = total > 0 ? occupiedCount / total : 0;
+    const ALERT_ID = "occupancy-warning";
+    const occupiedCount = beds.filter(b => b.status === "occupied").length;
+    const occupancyRatio = occupiedCount / beds.length;
+    const shouldShowWarning = occupancyRatio >= 0.8;
 
-  setAlerts(prevAlerts => {
-    // 1. Always remove the old warning first
-    const filtered = prevAlerts.filter(a => a.id !== ALERT_ID);
+    console.log(`Checking Alert: Ratio is ${occupancyRatio.toFixed(2)}. Show warning? ${shouldShowWarning}`);
 
-    // 2. Only add it back if the math is actually >= 80%
-    if (total > 0 && occupancyRatio >= 0.8) {
-      return [
-        ...filtered,
-        {
-          id: ALERT_ID,
-          type: "warning",
-          message: `⚠ Ward Occupancy ≥ 80% (${Math.round(occupancyRatio * 100)}%)`,
-        }
-      ];
-    }
-    // 3. Otherwise, return the filtered list (warning is gone)
-    return filtered;
-  });
-}, [beds]);
+    setAlerts(prevAlerts => {
+      // Always remove the old alert first to avoid duplicates
+      const otherAlerts = prevAlerts.filter(a => a.id !== ALERT_ID);
 
+      if (shouldShowWarning) {
+        return [
+          ...otherAlerts,
+          {
+            id: ALERT_ID,
+            type: "warning",
+            message: `⚠ Ward Occupancy ≥ 80% (${Math.round(occupancyRatio * 100)}%)`,
+          }
+        ];
+      }
+      
+      // If ratio is < 80%, we return the list WITHOUT the occupancy warning
+      return otherAlerts;
+    });
+  }, [beds]); // Correctly re-runs whenever beds state changes
 
-  // Correct updateBed: creates new array and new bed objects to force React update
+  // 3. Bed Update Logic
   const updateBed = useCallback((updatedBed) => {
     setBeds((prevBeds) =>
       prevBeds.map((b) =>
-        (b.id === updatedBed.id ? { ...b, ...updatedBed } : b))
+        b.id === updatedBed.id ? { ...b, ...updatedBed } : b
+      )
     );
   }, []);
 
-  // Update shift (same pattern)
+  // 4. Shift Update Logic
   const updateShift = useCallback((updatedShift) => {
     setShifts((prev) =>
-      prev.map((s) => 
-        (s.id === updatedShift.id ? {...s, ...updatedShift} : s))
+      prev.map((s) =>
+        s.id === updatedShift.id ? { ...s, ...updatedShift } : s
+      )
     );
   }, []);
 
-  // Memoize context value for performance
   const value = useMemo(() => ({
     shifts,
     beds,
