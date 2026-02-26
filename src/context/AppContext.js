@@ -25,22 +25,21 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   // 3. Keep your alert logic exactly as it was
- useEffect(() => {
+useEffect(() => {
   if (beds.length === 0) return;
 
   const occupiedCount = beds.filter((b) => b.status === "occupied").length;
-  const occupancyRate = occupiedCount / beds.length;
   const ALERT_ID = "occupancy-warning";
 
   setAlerts((prevAlerts) => {
     const otherAlerts = prevAlerts.filter(a => a.id !== ALERT_ID);
 
-    if (occupancyRate >= 0.8) {   // 
+    if (occupiedCount >= beds.length * 0.8) {
       return [
         ...otherAlerts,
         {
           id: ALERT_ID,
-          message: `⚠ Ward Occupancy ≥ 80% (${(occupancyRate * 100).toFixed(0)}%)`,
+          message: `⚠ Ward Occupancy ≥ 80% (${Math.round((occupiedCount / beds.length) * 100)}%)`,
           type: "warning"
         }
       ];
