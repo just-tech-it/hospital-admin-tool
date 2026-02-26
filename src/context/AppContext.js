@@ -66,15 +66,15 @@ export const AppProvider = ({ children }) => {
   const updateBed = useCallback((updatedBed) => {
     setBeds((prevBeds) =>
       prevBeds.map((b) =>
-        b.id === updatedBed.id ? { ...b, ...updatedBed } : b
-      )
+        (b.id === updatedBed.id ? { ...b, ...updatedBed } : b))
     );
   }, []);
 
   // Update shift (same pattern)
   const updateShift = useCallback((updatedShift) => {
     setShifts((prev) =>
-      prev.map((s) => (s.id === updatedShift.id ? updatedShift : s))
+      prev.map((s) => 
+        (s.id === updatedShift.id ? {...s, ...updatedShift} : s))
     );
   }, []);
 
