@@ -1,7 +1,7 @@
 import { createContext, useState, useEffect, useMemo, useCallback } from "react";
 // 1. Import the service you just created
 import { fetchInitialData } from "../service/api"; 
-import { type } from "@testing-library/user-event/dist/type";
+
 
 export const AppContext = createContext();
 
@@ -25,37 +25,29 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   // 3. Keep your alert logic exactly as it was
- useEffect(() => {
+useEffect(() => {
   if (beds.length === 0) return;
 
-  const occupied = beds.filter((b) => b.status === "occupied").length;
-  const isOverCapacity = (occupied / beds.length) > 0.8;
+  const occupiedCount = beds.filter((b) => b.status === "occupied").length;
+  const occupancyRate = occupiedCount / beds.length;
+  const ALERT_ID = "occupancy-warning";
 
-  let timer;
+  setAlerts((prevAlerts) => {
+    const otherAlerts = prevAlerts.filter(a => a.id !== ALERT_ID);
 
-  if (isOverCapacity) {
-    setAlerts((prev) => {
-      // Don't recreate alert if already showing
-      if (prev.length > 0) return prev;
+    if (occupancyRate > 0.8) {
+      return [
+        ...otherAlerts,
+        {
+          id: ALERT_ID,
+          message: `⚠ Ward Occupancy > 80% (${(occupancyRate * 100).toFixed(0)}%)`,
+          type: "warning"
+        }
+      ];
+    }
 
-      return [{
-        id: Date.now(),
-        message: "⚠ Ward Occupancy > 80%",
-        type: "warning"
-      }];
-    });
-
-    timer = setTimeout(() => {
-      setAlerts([]);
-    }, 3000);
- } else {
-  // Only call setAlerts if there's actually something to clear
-  setAlerts((prev) => (prev.length > 0 ? [] : prev));
-}
-
-  return () => {
-    if (timer) clearTimeout(timer);
-  };
+    return otherAlerts;
+  });
 }, [beds]);
 
   // 4. Keep your helper functions
