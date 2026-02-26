@@ -25,30 +25,33 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   // 3. Keep your alert logic exactly as it was
-useEffect(() => {
-  if (beds.length === 0) return;
+  useEffect(() => {
+    if (beds.length === 0) return;
 
-  const occupiedCount = beds.filter((b) => b.status === "occupied").length;
-  const occupancyRate = occupiedCount / beds.length;
-  const ALERT_ID = "occupancy-warning";
+    const occupiedCount = beds.filter((b) => b.status === "occupied").length;
+    const occupancyRate = occupiedCount / beds.length;
+    const ALERT_ID = "occupancy-warning";
 
-  setAlerts((prevAlerts) => {
-    const otherAlerts = prevAlerts.filter(a => a.id !== ALERT_ID);
+    const isOverCapacity = occupancyRate >= 0.8; 
 
-    if (occupancyRate >= 0.8) {
-      return [
-        ...otherAlerts,
-        {
-          id: ALERT_ID,
-          message: `⚠ Ward Occupancy ≥ 80% (${(occupancyRate * 100).toFixed(0)}%)`,
-          type: "warning"
-        }
-      ];
-    }
+    setAlerts((prevAlerts) => {
+      const otherAlerts = prevAlerts.filter(a => a.id !== ALERT_ID);
 
-    return otherAlerts;
-  });
-}, [beds]);
+      if (isOverCapacity) {
+        return [
+          ...otherAlerts,
+          {
+            id: ALERT_ID,
+            message: `⚠ Ward Occupancy ≥ 80% (${(occupancyRate * 100).toFixed(0)}%)`,
+            type: "warning"
+          }
+        ];
+      }
+
+      return otherAlerts;
+    });
+  }, [beds]);
+
 
   // 4. Keep your helper functions
   const updateShift = useCallback((updatedShift) => {
