@@ -35,12 +35,12 @@ useEffect(() => {
   setAlerts((prevAlerts) => {
     const otherAlerts = prevAlerts.filter(a => a.id !== ALERT_ID);
 
-    if (occupancyRate > 0.8) {
+    if (occupancyRate >= 0.8) {
       return [
         ...otherAlerts,
         {
           id: ALERT_ID,
-          message: `⚠ Ward Occupancy > 80% (${(occupancyRate * 100).toFixed(0)}%)`,
+          message: `⚠ Ward Occupancy ≥ 80% (${(occupancyRate * 100).toFixed(0)}%)`,
           type: "warning"
         }
       ];
