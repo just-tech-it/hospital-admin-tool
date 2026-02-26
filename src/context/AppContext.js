@@ -28,34 +28,38 @@ export const AppProvider = ({ children }) => {
   // Replace your existing occupancy useEffect with this:
 
   useEffect(() => {
+  if (beds.length === 0) {
+    setAlerts([]);
+    return;
+  }
+
+  const occupiedCount = beds.filter(b => b.status === "occupied").length;
+  const occupancyRatio = occupiedCount / beds.length;
   const ALERT_ID = "occupancy-warning";
 
-  // 1. Calculate occupancy
-  const totalBeds = beds.length;
-  const occupiedCount = beds.filter((b) => b.status === "occupied").length;
-  const occupancyPercent = totalBeds > 0 ? (occupiedCount / totalBeds) * 100 : 0;
+  console.log("Beds length:", beds.length);
+  console.log("Occupied count:", occupiedCount);
+  console.log("Occupancy ratio:", occupancyRatio);
 
-  setAlerts((prevAlerts) => {
-    // 2. Filter out the existing warning every time the effect runs
-    const otherAlerts = prevAlerts.filter(a => a.id !== ALERT_ID);
+  setAlerts(prevAlerts => {
+    const filteredAlerts = prevAlerts.filter(a => a.id !== ALERT_ID);
 
-    // 3. Only add it back if we actually meet the criteria
-    if (totalBeds > 0 && occupancyPercent >= 80) {
+    if (occupancyRatio >= 0.8) {
+      console.log("Adding warning alert");
       return [
-        ...otherAlerts,
+        ...filteredAlerts,
         {
           id: ALERT_ID,
-          message: `⚠ Ward Occupancy ≥ 80% (${Math.round(occupancyPercent)}%)`,
-          type: "warning"
+          type: "warning",
+          message: `⚠ Ward Occupancy ≥ 80% (${Math.round(occupancyRatio * 100)}%)`,
         }
       ];
+    } else {
+      console.log("Removing warning alert");
+      return filteredAlerts;
     }
-
-    // 4. Otherwise, return the list WITHOUT the warning
-    return otherAlerts;
   });
-}, [beds]);
-  
+}, [beds]);  
 
 
   // Correct updateBed: creates new array and new bed objects to force React update
