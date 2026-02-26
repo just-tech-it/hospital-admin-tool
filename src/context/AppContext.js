@@ -1,6 +1,7 @@
-import { createContext, useState, useEffect, useMemo } from "react";
+import { createContext, useState, useEffect, useMemo, useCallback } from "react";
 // 1. Import the service you just created
 import { fetchInitialData } from "../service/api"; 
+import { type } from "@testing-library/user-event/dist/type";
 
 export const AppContext = createContext();
 
@@ -30,26 +31,32 @@ export const AppProvider = ({ children }) => {
     const occupied = beds.filter((b) => b.status === "occupied").length;
 
     if (occupied / beds.length > 0.8) {
-      const newAlert = { id: Date.now(), message: "⚠ Ward Occupancy > 80% " };
+      const newAlert = { 
+        id: Date.now(), 
+        message: "⚠ Ward Occupancy > 80% ", 
+        type: "Warning"
+      };
       setAlerts([newAlert]);
 
       const timer = setTimeout(() => setAlerts([]), 3000);
       return () => clearTimeout(timer);
+    }else{
+      setAlerts([]);
     }
   }, [beds]);
 
   // 4. Keep your helper functions
-  const updateShift = (updatedShift) => {
+  const updateShift = useCallback((updatedShift) => {
     setShifts((prev) => prev.map((s) => (s.id === updatedShift.id ? updatedShift : s)));
-  };
+  }, []);
 
-  const updateBed = (updatedBed) => {
+  const updateBed = useCallback((updatedBed) => {
     setBeds((prev) => prev.map((b) => (b.id === updatedBed.id ? updatedBed : b)));
-  };
+  }, []);
 
-  const value = useMemo(() => {
-    return { shifts, beds, alerts, updateBed, updateShift };
-  }, [shifts, beds, alerts]);
+  const value = useMemo(() => ({
+    shifts, beds, alerts, updateBed, updateShift 
+  }), [shifts, beds, alerts, updateBed, updateShift]);
 
   return (
     // 5. IMPORTANT: Use AppContext.Provider (not AppProvider)

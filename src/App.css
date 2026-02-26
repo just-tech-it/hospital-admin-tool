@@ -36,3 +36,16 @@
     transform: rotate(360deg);
   }
 }
+
+.App-alert{
+  background: '#ff4444'; 
+  color: 'white'; 
+  padding: '15px'; 
+  border-radius: '5px';
+  margin-bottom: '10px';
+  box-shadow: '0 2px 5px rgba(0,0,0,0.2)';
+  position: 'fixed';
+  top: '20px'; 
+  right: '20px'; 
+  z-index: 1000;
+}

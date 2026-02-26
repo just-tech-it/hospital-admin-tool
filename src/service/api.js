@@ -31,7 +31,7 @@ export const fetchInitialData = async () => {
   try {
     const [shiftsData, bedsData] = await Promise.all([
       fetchShifts(),
-      fetchBeds(),
+      fetchBeds()
     ]);
     return { shiftsData, bedsData };
   } catch (error) {
