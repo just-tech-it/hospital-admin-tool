@@ -48,9 +48,10 @@ export const AppProvider = ({ children }) => {
     timer = setTimeout(() => {
       setAlerts([]);
     }, 3000);
-  } else {
-    setAlerts([]);
-  }
+ } else {
+  // Only call setAlerts if there's actually something to clear
+  setAlerts((prev) => (prev.length > 0 ? [] : prev));
+}
 
   return () => {
     if (timer) clearTimeout(timer);
