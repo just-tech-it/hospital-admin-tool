@@ -66,7 +66,7 @@ export const AppProvider = ({ children }) => {
   const updateBed = useCallback((updatedBed) => {
     setBeds((prevBeds) =>
       prevBeds.map((b) =>
-        b.id === updatedBed.id ? { ...b, status: updatedBed.status } : b
+        b.id === updatedBed.id ? { ...b, ...updatedBed } : b
       )
     );
   }, []);
