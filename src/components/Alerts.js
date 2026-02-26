@@ -1,15 +1,26 @@
-import  { useContext } from 'react';
-import { AppContext } from '../context/AppContext';
+import React, { useContext } from "react";
+import { AppContext } from "../context/AppContext";
 
-export const Alerts = () => {
+const Alerts = () => {
   const { alerts } = useContext(AppContext);
 
-  if (!alerts || alerts.length === 0) return null;
+  if (alerts.length === 0) return null;
 
   return (
-    <div className='alerts-container'>
+    <div style={{ padding: "20px" }}>
       {alerts.map(alert => (
-        <div key={alert.id} className={`alert alert-${alert.type}`}>
+        <div
+          key={alert.id}
+          className={`alert alert-${alert.type}`}
+          style={{
+            padding: "12px",
+            marginBottom: "10px",
+            borderRadius: "6px",
+            backgroundColor: "#fff3cd",
+            color: "#856404",
+            border: "1px solid #ffeeba"
+          }}
+        >
           {alert.message}
         </div>
       ))}
@@ -17,4 +28,4 @@ export const Alerts = () => {
   );
 };
 
- export default Alerts;
+export default Alerts;
