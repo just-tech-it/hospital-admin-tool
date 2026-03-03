@@ -7,7 +7,7 @@ export const AppProvider = ({ children }) => {
   const [shifts, setShifts] = useState([]);
   const [beds, setBeds] = useState([]);
 
-  // 1. Load initial data
+  // Load initial data
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -18,45 +18,55 @@ export const AppProvider = ({ children }) => {
         console.error("Failed to load clinical data", error);
       }
     };
+
     loadData();
   }, []);
 
-  // 2. DERIVED ALERTS (Calculated on the fly)
-  // This replaces the useEffect + setAlerts logic entirely.
+  // Derived Alerts (always recalculates when beds change)
   const alerts = useMemo(() => {
-    const activeAlerts = [];
-    if (beds.length === 0) return activeAlerts;
+    if (!beds.length) return [];
 
-    const occupiedCount = beds.filter(b => b.status === "occupied").length;
-    const occupancyRatio = occupiedCount / beds.length;
+    const occupiedCount = beds.filter(
+      bed => bed.status?.toLowerCase().trim() === "occupied"
+    ).length;
 
-    if (occupancyRatio >= 0.8) {
-      activeAlerts.push({
+    const occupancy = occupiedCount / beds.length;
+
+    if (occupancy < 0.8) return [];
+
+    return [
+      {
         id: "occupancy-warning",
         type: "warning",
-        message: `⚠ Ward Occupancy ≥ 80% (${Math.round(occupancyRatio * 100)}%)`,
-      });
-    }
+        message: `⚠ Ward Occupancy ≥ 80% (${Math.round(occupancy * 100)}%)`,
+      },
+    ];
+  }, [beds]);
 
-    return activeAlerts;
-  }, [beds]); 
-
-  // 3. Update Logics (Memoized for performance)
+  // Update helpers
   const updateBed = useCallback((updatedBed) => {
-    setBeds(prev => prev.map(b => b.id === updatedBed.id ? { ...b, ...updatedBed } : b));
+    setBeds(prevBeds =>
+      prevBeds.map(bed =>
+        bed.id === updatedBed.id ? { ...bed, ...updatedBed } : bed
+      )
+    );
   }, []);
 
   const updateShift = useCallback((updatedShift) => {
-    setShifts(prev => prev.map(s => s.id === updatedShift.id ? { ...s, ...updatedShift } : s));
+    setShifts(prevShifts =>
+      prevShifts.map(shift =>
+        shift.id === updatedShift.id ? { ...shift, ...updatedShift } : shift
+      )
+    );
   }, []);
 
-  const value = useMemo(() => ({
+  const value = {
     shifts,
     beds,
-    alerts, // Still passed to the context, but now it's always "fresh"
+    alerts,
     updateBed,
-    updateShift
-  }), [shifts, beds, alerts, updateBed, updateShift]);
+    updateShift,
+  };
 
   return (
     <AppContext.Provider value={value}>
