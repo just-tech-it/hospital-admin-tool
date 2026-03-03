@@ -60,13 +60,13 @@ export const AppProvider = ({ children }) => {
     );
   }, []);
 
-  const value = {
+ const value = useMemo(() => ({
     shifts,
     beds,
     alerts,
     updateBed,
     updateShift,
-  };
+  }), [shifts, beds, alerts, updateBed, updateShift]);
 
   return (
     <AppContext.Provider value={value}>
