@@ -6,7 +6,7 @@ const BedManager = () => {
 
   const toggleStatus = (bed) => {
     const newStatus = bed.status === 'occupied' ? 'available' : 'occupied';
-    updateBed({ ...bed, status: newStatus });
+    updateBed({...bed, status: newStatus});
   };
 
   return (

@@ -3,7 +3,9 @@ import { AppContext } from '../context/AppContext';
 
 const Header = () => {
   const { beds } = useContext(AppContext);
-  const occupiedCount = beds.filter(b => b.status === "occupied").length;
+  const occupiedCount = beds.filter(
+      bed => bed.status?.toLowerCase().trim() === "occupied"
+    ).length;
 
   return (
     <header style={{ padding: '1rem', background: '#2c3e50', color: 'white', display: 'flex', justifyContent: 'space-between' }}>
