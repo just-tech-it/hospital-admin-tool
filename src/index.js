@@ -1,14 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import './index.css';
+import { AppProvider } from './context/AppContext'; // Import the provider
 
-// 1. Target the 'root' div from your HTML
 const root = ReactDOM.createRoot(document.getElementById('root'));
-
-// 2. Render the App component
 root.render(
   <React.StrictMode>
-    <App />
+    <AppProvider> {/* Wrap the App here */}
+      <App />
+    </AppProvider>
   </React.StrictMode>
 );
