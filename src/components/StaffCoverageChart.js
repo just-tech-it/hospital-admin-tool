@@ -1,35 +1,35 @@
-import { useContext } from "react";
+import React, { useContext } from "react";
 import { AppContext } from "../context/AppContext";
-import { BarChart, Bar, XAxis, YAxis, Tooltip } from "recharts";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from "recharts";
 
 const StaffCoverageChart = () => {
+  const { stats } = useContext(AppContext);
 
-  const { shifts } = useContext(AppContext);
-
-  const roleCounts = shifts.reduce((acc, shift) => {
-
-    acc[shift.role] = (acc[shift.role] || 0) + (shift.checkedIn ? 1 : 0);
-
-    return acc;
-
-  }, {});
-
-  const data = Object.keys(roleCounts).map(role => ({
-    role,
-    staff: roleCounts[role]
-  }));
+  const data = [
+    { name: "Active Staff", count: stats.activeStaff },
+    { name: "Occupied Beds", count: stats.occupiedBeds }
+  ];
 
   return (
-    <div style={{ background:"#fff", padding:"1rem", borderRadius:"10px" }}>
+    <div>
       <h3>Staff Coverage</h3>
-
-      <BarChart width={300} height={250} data={data}>
-        <XAxis dataKey="role"/>
-        <YAxis/>
-        <Tooltip/>
-        <Bar dataKey="staff" fill="#3182ce"/>
-      </BarChart>
-
+      <ResponsiveContainer width={250} height={250}>
+        <BarChart data={data}>
+          <XAxis dataKey="name" />
+          <YAxis allowDecimals={false} />
+          <Tooltip />
+          <Legend />
+          <Bar dataKey="count" fill="#3b82f6" />
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   );
 };

@@ -1,36 +1,34 @@
-import { useContext } from "react";
+import React, { useContext } from "react";
 import { AppContext } from "../context/AppContext";
-import { PieChart, Pie, Cell, Tooltip } from "recharts";
+import { PieChart, Pie, Cell, Legend, Tooltip } from "recharts";
 
 const BedOccupancyChart = () => {
-
   const { stats } = useContext(AppContext);
 
   const data = [
-    { name: "Occupied", value: stats.occupiedBeds },
-    { name: "Available", value: stats.availableBeds }
+    { name: "Occupied", value: stats.occupiedBeds, color: "#f87171" },
+    { name: "Available", value: stats.availableBeds, color: "#86efac" }
   ];
 
-  const COLORS = ["#e53e3e", "#38a169"];
-
   return (
-    <div style={{ background:"#fff", padding:"1rem", borderRadius:"10px" }}>
+    <div>
       <h3>Bed Occupancy</h3>
-
       <PieChart width={250} height={250}>
         <Pie
           data={data}
+          dataKey="value"
+          nameKey="name"
           cx="50%"
           cy="50%"
           outerRadius={80}
-          dataKey="value"
+          label
         >
           {data.map((entry, index) => (
-            <Cell key={index} fill={COLORS[index]} />
+            <Cell key={`cell-${index}`} fill={entry.color} />
           ))}
         </Pie>
-
         <Tooltip />
+        <Legend verticalAlign="bottom" height={36} />
       </PieChart>
     </div>
   );

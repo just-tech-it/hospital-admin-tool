@@ -1,20 +1,17 @@
-import { createContext, useEffect, useMemo, useCallback, useReducer } from "react";
+import React, { createContext, useReducer, useEffect, useMemo, useCallback } from "react";
 import { fetchInitialData } from "../service/api";
 
 export const AppContext = createContext();
 
-// Initial State
 const initialState = {
   beds: [],
   shifts: [],
-  logs: [],
-  loading: true
+  loading: true,
+  logs: []
 };
 
-// Reducer
 function reducer(state, action) {
   switch (action.type) {
-
     case "SET_DATA":
       return {
         ...state,
@@ -45,164 +42,102 @@ function reducer(state, action) {
         logs: [action.log, ...state.logs].slice(0, 10)
       };
 
-      case "ASSIGN_PATIENT":
-  return {
-    ...state,
-    beds: state.beds.map(b =>
-      b.id === action.bedId
-        ? { ...b, status: "occupied", patient: action.patient }
-        : b
-    )
-  };
-
-case "DISCHARGE_PATIENT":
-  return {
-    ...state,
-    beds: state.beds.map(b =>
-      b.id === action.bedId
-        ? { ...b, status: "available", patient: null }
-        : b
-    )
-  };
-
     default:
       return state;
   }
 }
 
 export const AppProvider = ({ children }) => {
+  const [state, dispatch] = React.useReducer(reducer, initialState);
 
-  const [state, dispatch] = useReducer(reducer, initialState);
-  const { beds, shifts, logs, loading } = state;
-
-  const assignPatient = useCallback((bedId, patient) => {
-
-  dispatch({
-    type: "ASSIGN_PATIENT",
-    bedId,
-    patient
-  });
-
-  addLog("PATIENT", `${patient.name} assigned to Bed ${bedId}`);
-
-}, [addLog]);
-
-const dischargePatient = useCallback((bedId) => {
-
-  dispatch({
-    type: "DISCHARGE_PATIENT",
-    bedId
-  });
-
-  addLog("PATIENT", `Patient discharged from Bed ${bedId}`);
-
-}, [addLog]);
-
-  // 1. Initial Data Load
+  // Initial Data Load + LocalStorage check
   useEffect(() => {
-
     const loadData = async () => {
       try {
-
         const savedBeds = localStorage.getItem("hosp_beds");
         const savedShifts = localStorage.getItem("hosp_shifts");
 
         if (savedBeds && savedShifts) {
-
           dispatch({
             type: "SET_DATA",
             beds: JSON.parse(savedBeds),
             shifts: JSON.parse(savedShifts)
           });
-
         } else {
-
           const { shiftsData, bedsData } = await fetchInitialData();
-
-          dispatch({
-            type: "SET_DATA",
-            beds: bedsData,
-            shifts: shiftsData
-          });
-
+          dispatch({ type: "SET_DATA", beds: bedsData, shifts: shiftsData });
         }
-
       } catch (error) {
         console.error("Failed to load clinical data", error);
+        dispatch({ type: "SET_DATA", beds: [], shifts: [] });
       }
     };
 
     loadData();
-
   }, []);
 
+  // Persist to localStorage when beds or shifts update
   useEffect(() => {
-
-  const interval = setInterval(() => {
-
-    const randomEvent = Math.random();
-
-    if (randomEvent > 0.7) {
-      addLog("SYSTEM", "Routine ward check completed");
+    if (!state.loading) {
+      localStorage.setItem("hosp_beds", JSON.stringify(state.beds));
+      localStorage.setItem("hosp_shifts", JSON.stringify(state.shifts));
     }
+  }, [state.beds, state.shifts, state.loading]);
 
-  }, 8000);
-
-  return () => clearInterval(interval);
-
-}, [addLog]);
-
-  // 2. Persist Data
+  // Real-time simulation of updates every 10 seconds
   useEffect(() => {
+    if (state.loading) return;
 
-    if (!loading) {
+    const interval = setInterval(() => {
+      // Randomly toggle a bed status
+      dispatch({
+        type: "UPDATE_BED",
+        bed: (() => {
+          const index = Math.floor(Math.random() * state.beds.length);
+          const bed = state.beds[index];
+          const newStatus = bed.status === "occupied" ? "available" : "occupied";
+          return {
+            ...bed,
+            status: newStatus,
+            patient:
+              newStatus === "available" ? null : bed.patient || { name: "Auto-Assigned" }
+          };
+        })()
+      });
 
-      localStorage.setItem("hosp_beds", JSON.stringify(beds));
-      localStorage.setItem("hosp_shifts", JSON.stringify(shifts));
+      // Randomly toggle a staff checkedIn status
+      dispatch({
+        type: "UPDATE_SHIFT",
+        shift: (() => {
+          const index = Math.floor(Math.random() * state.shifts.length);
+          const shift = state.shifts[index];
+          return { ...shift, checkedIn: !shift.checkedIn };
+        })()
+      });
+    }, 10000);
 
-    }
+    return () => clearInterval(interval);
+  }, [state.beds, state.shifts, state.loading]);
 
-  }, [beds, shifts, loading]);
-
-  // 3. Activity Logger
+  // Add log helper
   const addLog = useCallback((action, message) => {
-
     const newLog = {
       id: Date.now(),
-      timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit"
-      }),
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
       action,
       message
     };
-
-    dispatch({
-      type: "ADD_LOG",
-      log: newLog
-    });
-
+    dispatch({ type: "ADD_LOG", log: newLog });
   }, []);
 
-  // 4. Dashboard Stats
+  // Stats calculation
   const stats = useMemo(() => {
+    const totalBeds = state.beds.length;
+    const occupiedBeds = state.beds.filter(b => b.status?.toLowerCase() === "occupied").length;
+    const activeStaff = state.shifts.filter(s => s.checkedIn).length;
 
-    const totalBeds = beds.length;
-
-    const occupiedBeds =
-      beds.filter(b => b.status?.toLowerCase().trim() === "occupied").length;
-
-    const activeStaff =
-      shifts.filter(s => s.checkedIn).length;
-
-    const occupancyRatio =
-      totalBeds > 0 ? occupiedBeds / totalBeds : 0;
-
-    const staffToPatientRatio =
-      occupiedBeds > 0
-        ? Number((activeStaff / occupiedBeds).toFixed(2))
-        : activeStaff;
+    const occupancyRatio = totalBeds > 0 ? occupiedBeds / totalBeds : 0;
+    const staffToPatientRatio = occupiedBeds > 0 ? (activeStaff / occupiedBeds).toFixed(2) : activeStaff;
 
     return {
       totalBeds,
@@ -212,88 +147,61 @@ const dischargePatient = useCallback((bedId) => {
       activeStaff,
       staffToPatientRatio
     };
+  }, [state.beds, state.shifts]);
 
-  }, [beds, shifts]);
-
-  // 5. Alerts
+  // Alerts
   const alerts = useMemo(() => {
-
     const activeAlerts = [];
 
     if (stats.occupancyRatio >= 0.8) {
-
       activeAlerts.push({
         id: "occupancy-warning",
         type: "warning",
         message: `⚠ Ward Occupancy High: ${Math.round(stats.occupancyRatio * 100)}%`
       });
-
     }
 
     if (stats.occupiedBeds > 0 && stats.staffToPatientRatio < 0.2) {
-
       activeAlerts.push({
         id: "staffing-alert",
         type: "danger",
         message: `Critically Low Staffing: Ratio is ${stats.staffToPatientRatio} staff per patient`
       });
-
     }
 
     return activeAlerts;
-
   }, [stats]);
 
-  // 6. Update Bed
-  const updateBed = useCallback((updatedBed) => {
-
-    dispatch({
-      type: "UPDATE_BED",
-      bed: updatedBed
-    });
-
-    addLog(
-      "BED_MGMT",
-      `Bed ${updatedBed.id} marked as ${updatedBed.status.toUpperCase()}`
-    );
-
-  }, [addLog]);
-
-  // 7. Update Shift
-  const updateShift = useCallback((updatedShift) => {
-
-    dispatch({
-      type: "UPDATE_SHIFT",
-      shift: updatedShift
-    });
-
-    const statusText =
-      updatedShift.checkedIn ? "Checked In" : "Checked Out";
-
-    addLog(
-      "STAFF_MGMT",
-      `${updatedShift.staffName} (${updatedShift.role}) ${statusText}`
-    );
-
-  }, [addLog]);
-
-  // 8. Context Value
-  const value = useMemo(() => ({
-    beds,
-    shifts,
-    stats,
-    alerts,
-    logs,
-    loading,
-    updateBed,
-    updateShift,
-    addLog
-  }), [beds, shifts, stats, alerts, logs, loading, updateBed, updateShift, addLog]);
-
-  return (
-    <AppContext.Provider value={value}>
-      {children}
-    </AppContext.Provider>
+  // Update bed helper (with logging)
+  const updateBed = useCallback(
+    updatedBed => {
+      dispatch({ type: "UPDATE_BED", bed: updatedBed });
+      addLog("BED_MGMT", `Bed ${updatedBed.id} marked as ${updatedBed.status.toUpperCase()}`);
+    },
+    [addLog]
   );
 
+  // Update shift helper (with logging)
+  const updateShift = useCallback(
+    updatedShift => {
+      dispatch({ type: "UPDATE_SHIFT", shift: updatedShift });
+      const statusText = updatedShift.checkedIn ? "Checked In" : "Checked Out";
+      addLog("STAFF_MGMT", `${updatedShift.staffName} (${updatedShift.role}) ${statusText}`);
+    },
+    [addLog]
+  );
+
+  const value = useMemo(
+    () => ({
+      ...state,
+      stats,
+      alerts,
+      updateBed,
+      updateShift,
+      addLog
+    }),
+    [state, stats, alerts, updateBed, updateShift, addLog]
+  );
+
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
