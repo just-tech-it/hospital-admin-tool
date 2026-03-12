@@ -1,9 +1,9 @@
 import React from 'react';
-import Header from "./Header";
+import Header from "./Header"; // Make sure this matches the filename
 import Alerts from "./Alerts";
 import BedManager from "./BedManager";
 import ShiftManager from "./ShiftManager";
-import ActivityLog from "./ActivityLog";
+import ActivityLog from "./ActivityLog"; 
 import StatsCards from "./StatsCards";
 
 const Dashboard = () => {
@@ -12,17 +12,21 @@ const Dashboard = () => {
       <Header />
       <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
         <Alerts />
-        <StatsCards />
+        
+        {/* If you don't see the stats, make sure this line is here: */}
+        <StatsCards /> 
         
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: '1.2fr 1fr 280px', // 3 Columns!
+          gridTemplateColumns: '1.2fr 1fr 300px', // This creates the 3rd column
           gap: '20px',
           alignItems: 'start'
         }}>
           <BedManager />
           <ShiftManager />
-          <ActivityLog />
+          
+          {/* If you don't see the log, make sure this line is here: */}
+          <ActivityLog /> 
         </div>
       </div>
     </div>
