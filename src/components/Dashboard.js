@@ -1,31 +1,28 @@
 import React from 'react';
-import Header from "./Header"; // Make sure this matches the filename
-import Alerts from "./Alerts";
+import Header from "./Hearder"; // Match your current filename typo for now
+import StatsCards from "./StatsCards";
 import BedManager from "./BedManager";
 import ShiftManager from "./ShiftManager";
-import ActivityLog from "./ActivityLog"; 
-import StatsCards from "./StatsCards";
+import ActivityLog from "./ActivityLog";
 
 const Dashboard = () => {
   return (
     <div style={{ backgroundColor: '#f1f5f9', minHeight: '100vh' }}>
       <Header />
+      
       <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
-        <Alerts />
-        
-        {/* If you don't see the stats, make sure this line is here: */}
+        {/* This is the first part of the upgrade! */}
         <StatsCards /> 
         
+        {/* This CSS Grid is the second part of the upgrade! */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: '1.2fr 1fr 300px', // This creates the 3rd column
+          gridTemplateColumns: '1.2fr 1fr 300px', 
           gap: '20px',
-          alignItems: 'start'
+          alignItems: 'start' 
         }}>
           <BedManager />
           <ShiftManager />
-          
-          {/* If you don't see the log, make sure this line is here: */}
           <ActivityLog /> 
         </div>
       </div>
