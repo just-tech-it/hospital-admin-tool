@@ -5,15 +5,20 @@ import ShiftManager from "./ShiftManager";
 
 const Dashboard = () => {
   return (
-    <div className="dashboard-container">
+    <div className="app-container" style={{ backgroundColor: '#f4f7f6', minHeight: '100vh' }}>
       <Header />
-      <Alerts />
-      <main style={{ padding: '20px' }}>
-        <BedManager />
-        <ShiftManager />
-      </main>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
+        <Alerts />
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
+          gap: '20px',
+          marginTop: '20px' 
+        }}>
+          <BedManager />
+          <ShiftManager />
+        </div>
+      </div>
     </div>
   );
 };
-
-export default Dashboard;
