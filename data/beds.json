@@ -1,12 +1,12 @@
 [
-  { "id": 101, "status": "occupied" },
-  { "id": 102, "status": "occupied" },
-  { "id": 103, "status": "occupied" },
-  { "id": 104, "status": "occupied" },
-  { "id": 105, "status": "available" },
-  { "id": 106, "status": "available" },
-  { "id": 107, "status": "occupied" },
-  { "id": 108, "status": "occupied" },
-  { "id": 109, "status": "occupied" },
-  { "id": 110, "status": "available" }
+  { "id": 101, "status": "occupied", "patient": { "name": "John Doe", "condition": "Observation" } },
+  { "id": 102, "status": "occupied", "patient": null },
+  { "id": 103, "status": "occupied", "patient": null },
+  { "id": 104, "status": "occupied", "patient": null },
+  { "id": 105, "status": "available", "patient": null },
+  { "id": 106, "status": "available", "patient": null },
+  { "id": 107, "status": "occupied", "patient": null },
+  { "id": 108, "status": "occupied", "patient": null },
+  { "id": 109, "status": "occupied", "patient": null },
+  { "id": 110, "status": "available", "patient": null }
 ]
