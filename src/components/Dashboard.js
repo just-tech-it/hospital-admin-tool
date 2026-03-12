@@ -1,9 +1,11 @@
 import React from 'react';
-import Header from "./Hearder"; // Match your current filename typo for now
+import Header from "./Header";
 import StatsCards from "./StatsCards";
 import BedManager from "./BedManager";
 import ShiftManager from "./ShiftManager";
 import ActivityLog from "./ActivityLog";
+import BedOccupancyChart from "./BedOccupancyChart";
+import StaffCoverageChart from "./StaffCoverageChart";
 
 const Dashboard = () => {
   return (
@@ -11,10 +13,17 @@ const Dashboard = () => {
       <Header />
       
       <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
-        {/* This is the first part of the upgrade! */}
-        <StatsCards /> 
         
-        {/* This CSS Grid is the second part of the upgrade! */}
+        {/* Stats */}
+        <StatsCards />
+
+        {/* Charts Section */}
+        <div style={{ display:"flex", gap:"20px", marginBottom:"20px" }}>
+          <BedOccupancyChart />
+          <StaffCoverageChart />
+        </div>
+
+        {/* Main Dashboard Grid */}
         <div style={{ 
           display: 'grid', 
           gridTemplateColumns: '1.2fr 1fr 300px', 
@@ -23,8 +32,9 @@ const Dashboard = () => {
         }}>
           <BedManager />
           <ShiftManager />
-          <ActivityLog /> 
+          <ActivityLog />
         </div>
+
       </div>
     </div>
   );

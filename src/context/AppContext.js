@@ -1,69 +1,208 @@
-import { createContext, useState, useEffect, useMemo, useCallback } from "react";
+import { createContext, useEffect, useMemo, useCallback, useReducer } from "react";
 import { fetchInitialData } from "../service/api";
 
 export const AppContext = createContext();
 
-export const AppProvider = ({ children }) => {
-  const [shifts, setShifts] = useState([]);
-  const [beds, setBeds] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [logs, setLogs] = useState([]);
+// Initial State
+const initialState = {
+  beds: [],
+  shifts: [],
+  logs: [],
+  loading: true
+};
 
-  // 1. Initial Data Load with Persistence Check
+// Reducer
+function reducer(state, action) {
+  switch (action.type) {
+
+    case "SET_DATA":
+      return {
+        ...state,
+        beds: action.beds,
+        shifts: action.shifts,
+        loading: false
+      };
+
+    case "UPDATE_BED":
+      return {
+        ...state,
+        beds: state.beds.map(b =>
+          b.id === action.bed.id ? { ...b, ...action.bed } : b
+        )
+      };
+
+    case "UPDATE_SHIFT":
+      return {
+        ...state,
+        shifts: state.shifts.map(s =>
+          s.id === action.shift.id ? { ...s, ...action.shift } : s
+        )
+      };
+
+    case "ADD_LOG":
+      return {
+        ...state,
+        logs: [action.log, ...state.logs].slice(0, 10)
+      };
+
+      case "ASSIGN_PATIENT":
+  return {
+    ...state,
+    beds: state.beds.map(b =>
+      b.id === action.bedId
+        ? { ...b, status: "occupied", patient: action.patient }
+        : b
+    )
+  };
+
+case "DISCHARGE_PATIENT":
+  return {
+    ...state,
+    beds: state.beds.map(b =>
+      b.id === action.bedId
+        ? { ...b, status: "available", patient: null }
+        : b
+    )
+  };
+
+    default:
+      return state;
+  }
+}
+
+export const AppProvider = ({ children }) => {
+
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const { beds, shifts, logs, loading } = state;
+
+  const assignPatient = useCallback((bedId, patient) => {
+
+  dispatch({
+    type: "ASSIGN_PATIENT",
+    bedId,
+    patient
+  });
+
+  addLog("PATIENT", `${patient.name} assigned to Bed ${bedId}`);
+
+}, [addLog]);
+
+const dischargePatient = useCallback((bedId) => {
+
+  dispatch({
+    type: "DISCHARGE_PATIENT",
+    bedId
+  });
+
+  addLog("PATIENT", `Patient discharged from Bed ${bedId}`);
+
+}, [addLog]);
+
+  // 1. Initial Data Load
   useEffect(() => {
+
     const loadData = async () => {
       try {
-        // Try to load from localStorage first for "instant" feel
+
         const savedBeds = localStorage.getItem("hosp_beds");
         const savedShifts = localStorage.getItem("hosp_shifts");
 
         if (savedBeds && savedShifts) {
-          setBeds(JSON.parse(savedBeds));
-          setShifts(JSON.parse(savedShifts));
+
+          dispatch({
+            type: "SET_DATA",
+            beds: JSON.parse(savedBeds),
+            shifts: JSON.parse(savedShifts)
+          });
+
         } else {
-          // If no local data, fetch from API
+
           const { shiftsData, bedsData } = await fetchInitialData();
-          setShifts(shiftsData);
-          setBeds(bedsData);
+
+          dispatch({
+            type: "SET_DATA",
+            beds: bedsData,
+            shifts: shiftsData
+          });
+
         }
+
       } catch (error) {
         console.error("Failed to load clinical data", error);
-      } finally {
-        setLoading(false);
       }
     };
+
     loadData();
+
   }, []);
 
-  // 2. Persistence Effect: Save to localStorage whenever data changes
   useEffect(() => {
+
+  const interval = setInterval(() => {
+
+    const randomEvent = Math.random();
+
+    if (randomEvent > 0.7) {
+      addLog("SYSTEM", "Routine ward check completed");
+    }
+
+  }, 8000);
+
+  return () => clearInterval(interval);
+
+}, [addLog]);
+
+  // 2. Persist Data
+  useEffect(() => {
+
     if (!loading) {
+
       localStorage.setItem("hosp_beds", JSON.stringify(beds));
       localStorage.setItem("hosp_shifts", JSON.stringify(shifts));
+
     }
+
   }, [beds, shifts, loading]);
 
-  // 3. Activity Logger Helper
+  // 3. Activity Logger
   const addLog = useCallback((action, message) => {
+
     const newLog = {
       id: Date.now(),
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      timestamp: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      }),
       action,
       message
     };
-    setLogs(prev => [newLog, ...prev].slice(0, 10)); // Keep last 10 entries
+
+    dispatch({
+      type: "ADD_LOG",
+      log: newLog
+    });
+
   }, []);
 
-  // 4. Centralized Stats (The Dashboard "Brain")
+  // 4. Dashboard Stats
   const stats = useMemo(() => {
+
     const totalBeds = beds.length;
-    const occupiedBeds = beds.filter(b => b.status?.toLowerCase().trim() === "occupied").length;
-    const activeStaff = shifts.filter(s => s.checkedIn).length;
-    
-    const occupancyRatio = totalBeds > 0 ? occupiedBeds / totalBeds : 0;
-    
-    // Pro Metric: Staff to Patient Ratio
-    const staffToPatientRatio = occupiedBeds > 0 ? (activeStaff / occupiedBeds).toFixed(2) : activeStaff;
+
+    const occupiedBeds =
+      beds.filter(b => b.status?.toLowerCase().trim() === "occupied").length;
+
+    const activeStaff =
+      shifts.filter(s => s.checkedIn).length;
+
+    const occupancyRatio =
+      totalBeds > 0 ? occupiedBeds / totalBeds : 0;
+
+    const staffToPatientRatio =
+      occupiedBeds > 0
+        ? Number((activeStaff / occupiedBeds).toFixed(2))
+        : activeStaff;
 
     return {
       totalBeds,
@@ -73,69 +212,88 @@ export const AppProvider = ({ children }) => {
       activeStaff,
       staffToPatientRatio
     };
+
   }, [beds, shifts]);
 
-  // 5. Advanced Alerts
+  // 5. Alerts
   const alerts = useMemo(() => {
+
     const activeAlerts = [];
 
-    // Occupancy Warning
     if (stats.occupancyRatio >= 0.8) {
+
       activeAlerts.push({
         id: "occupancy-warning",
         type: "warning",
-        message: `⚠ Ward Occupancy High: ${Math.round(stats.occupancyRatio * 100)}%`,
+        message: `⚠ Ward Occupancy High: ${Math.round(stats.occupancyRatio * 100)}%`
       });
+
     }
 
-    // Staffing Level Warning
     if (stats.occupiedBeds > 0 && stats.staffToPatientRatio < 0.2) {
+
       activeAlerts.push({
         id: "staffing-alert",
         type: "danger",
-        message: `Critically Low Staffing: Ratio is ${stats.staffToPatientRatio} staff per patient`,
+        message: `Critically Low Staffing: Ratio is ${stats.staffToPatientRatio} staff per patient`
       });
+
     }
 
     return activeAlerts;
+
   }, [stats]);
 
-  // 6. Upgraded Update Helpers with Logging
+  // 6. Update Bed
   const updateBed = useCallback((updatedBed) => {
-    setBeds((prevBeds) =>
-      prevBeds.map((bed) =>
-        bed.id === updatedBed.id ? { ...bed, ...updatedBed } : bed
-      )
+
+    dispatch({
+      type: "UPDATE_BED",
+      bed: updatedBed
+    });
+
+    addLog(
+      "BED_MGMT",
+      `Bed ${updatedBed.id} marked as ${updatedBed.status.toUpperCase()}`
     );
-    addLog("BED_MGMT", `Bed ${updatedBed.id} marked as ${updatedBed.status.toUpperCase()}`);
+
   }, [addLog]);
 
+  // 7. Update Shift
   const updateShift = useCallback((updatedShift) => {
-    setShifts((prevShifts) =>
-      prevShifts.map((shift) =>
-        shift.id === updatedShift.id ? { ...shift, ...updatedShift } : shift
-      )
+
+    dispatch({
+      type: "UPDATE_SHIFT",
+      shift: updatedShift
+    });
+
+    const statusText =
+      updatedShift.checkedIn ? "Checked In" : "Checked Out";
+
+    addLog(
+      "STAFF_MGMT",
+      `${updatedShift.staffName} (${updatedShift.role}) ${statusText}`
     );
-    const statusText = updatedShift.checkedIn ? "Checked In" : "Checked Out";
-    addLog("STAFF_MGMT", `${updatedShift.staffName} (${updatedShift.role}) ${statusText}`);
+
   }, [addLog]);
 
-  // 7. Context Value
+  // 8. Context Value
   const value = useMemo(() => ({
-    shifts,
     beds,
+    shifts,
     stats,
     alerts,
-    logs, // Provide logs to ActivityLog component
+    logs,
     loading,
     updateBed,
     updateShift,
     addLog
-  }), [shifts, beds, stats, alerts, logs, loading, updateBed, updateShift, addLog]);
+  }), [beds, shifts, stats, alerts, logs, loading, updateBed, updateShift, addLog]);
 
   return (
     <AppContext.Provider value={value}>
       {children}
     </AppContext.Provider>
   );
+
 };
