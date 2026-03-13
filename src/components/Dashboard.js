@@ -26,7 +26,7 @@ const Dashboard = () => {
         {/* Main Dashboard Grid */}
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: '1.2fr 1fr 300px', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
           gap: '20px',
           alignItems: 'start' 
         }}>
